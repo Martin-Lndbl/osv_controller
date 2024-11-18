@@ -16,6 +16,8 @@
           };
         in
         {
+          packages.capstan = pkgs.capstan;
+
           devShell = pkgs.mkShell {
 
             # Don't add glib.static here - As there is an issue with wcslen defined twice.
