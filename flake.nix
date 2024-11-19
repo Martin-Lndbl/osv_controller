@@ -31,6 +31,7 @@
               binutils
               bisoncpp
               gdb # gnu debugger
+              # glibc.static
               gnumake
               gnupatch
               flamegraph # code hierarchy visualization
@@ -40,7 +41,9 @@
               libvirt
               lua53Packages.lua
               ncurses
+              pkg-config
               pax-utils # elf security library
+              pyright
               python3
               python312Packages.requests
               p11-kit # PKCS#11 loader
@@ -48,7 +51,8 @@
               readline # interactive line editing
               unzip
               zulu8 # Java jdk
-
+              flex
+              bison
             ];
 
             buildInputs = with pkgs; [
