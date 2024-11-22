@@ -1,0 +1,3 @@
+# benchmark | vcpus | threads | memsize | operations | iterations
+/micro 1 1 4G 1000000 1
+/micro 4 4 2G 500000 5
