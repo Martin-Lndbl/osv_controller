@@ -6,4 +6,5 @@ final: _prev: {
     enableStatic = true;
     enableShared = false;
   };
+  gen_compile_commands = _prev.callPackage ./pkgs/gen_compile_commands.nix { };
 }
