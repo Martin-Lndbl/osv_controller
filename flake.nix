@@ -34,6 +34,7 @@
               # glibc.static
               gnumake
               gnupatch
+              gen_compile_commands
               flamegraph # code hierarchy visualization
               libedit
               libgcc # Compiler
