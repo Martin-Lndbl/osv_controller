@@ -47,6 +47,7 @@
               pyright
               python3
               python312Packages.requests
+              python312Packages.matplotlib
               p11-kit # PKCS#11 loader
               qemu_full # hypervisor
               readline # interactive line editing

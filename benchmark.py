@@ -15,14 +15,15 @@ def run_benchmarks(file_path, output_file=None):
                 continue
 
             # Parse the line
-            benchmark, vcpus, threads, memsize, operations, iterations = line.split()
-
+            benchmark, vcpus, threads, memsize, iterations, measurements, granularity= line.split()
+        
             # Build the command
             command = (
+                f"taskset -c 64-{64+int(vcpus)-1} "
                 f"./osv/scripts/run.py --novnc "
                 f"--vcpus {vcpus} "
                 f"--memsize {memsize} "
-                f"-e \"{benchmark} -t {threads} -a {operations} -i {iterations} -m\""
+                f"-e \"{benchmark} -t {threads} -i {iterations} -m {measurements} -g {granularity}\""
             )
 
             # Print the command to verify

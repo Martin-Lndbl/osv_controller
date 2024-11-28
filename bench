@@ -1,3 +1,7 @@
-# benchmark | vcpus | threads | memsize | operations | iterations
-/micro 1 1 4G 1000000 1
-/micro 4 4 2G 500000 5
+# benchmark | vcpus | threads | memsize | iterations | measurements | granularity
+/bulk 1 1 4G 5 64 64
+# /bulk 1 2 4G 5 1024 64
+# /bulk 4 4 4G 5 1024 64
+# /bulk 8 8 4G 5 1024 64
+# /bulk 16 16 4G 5 1024 64
+# /bulk 32 32 4G 5 1024 64
