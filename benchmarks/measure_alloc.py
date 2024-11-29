@@ -20,7 +20,7 @@ def run_benchmarks(file_path, output_file=None):
             # Build the command
             command = (
                 f"taskset -c 64-{64+int(vcpus)-1} "
-                f"./osv/scripts/run.py --novnc "
+                f"../osv/scripts/run.py --novnc "
                 f"--vcpus {vcpus} "
                 f"--memsize {memsize} "
                 f"-e \"{benchmark} -t {threads} -i {iterations} -m {measurements} -g {granularity}\""
