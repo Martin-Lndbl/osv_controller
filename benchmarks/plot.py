@@ -1,56 +1,123 @@
 import matplotlib.pyplot as plt
 import argparse
+import os
+import numpy as np
 
-def plot_benchmark(cycles, xlabel, ylabel, granularity):
-    measurements = list(range(1, len(cycles) * granularity + 1, granularity))
 
+def plot_benchmark(data, granularity, xlabel, ylabel):
     plt.figure(figsize=(10, 6))
-    plt.plot(measurements, cycles, marker='o', linestyle='-', color='blue', label='Cycles per Allocation')
+   
+    
+    for file_name, cpu_cycles in data.items():
+        # Generate measurements based on the length of cpu_cycles and granularity
+        measurements = list(range(1, len(cpu_cycles) * granularity + 1, granularity))
 
+        # Calculate the mean and standard deviation
+        cycles = cpu_cycles.mean(axis=1)
+        std_devs = np.std(cpu_cycles, axis=1)
+        
+        # Set the marker style for better visualization if data points are sparse
+        marker_style = 'o' if len(measurements) <= 150 else None
+        
+        # Plot mean cycles with error bars for standard deviation
+        plt.errorbar(
+            measurements,
+            cycles,
+            yerr=std_devs,
+            fmt=marker_style,  # Marker style (only applies if data points are sparse)
+            linestyle='-',
+            label=os.path.basename(file_name),
+            capsize=3  # Add caps to the error bars
+        )
+
+    # Label the axes and title
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(f"Benchmark: {ylabel} per {xlabel}")
+
+    # Add grid and legend for better readability
     plt.grid(True)
     plt.legend()
 
+    # Save and display the plot
     plt.savefig("benchmark_plot.svg", format="svg")
+    plt.show()
 
-def read_cycles_from_file(file_path):
+
+def parse_file(file_path):
     with open(file_path, 'r') as file:
         lines = file.readlines()
     
-    cycles = []
-    xlabel, ylabel, granularity = "", "", None
+    xlabel = ""
+    ylabel = ""
+    granularity = None
+
+    cpu_cycles = None
+    measurements = 1
+    measurement = 0
+    iterations = 1
+    iteration = -1
 
     for i, line in enumerate(lines):
-        if "granularity" in line:
+        if line.startswith("measurements"):
+            measurements = int(line.split()[1])
+        elif line.startswith("granularity"):
             granularity = int(line.split()[1])
+        elif line.startswith("iterations"):
+            iterations = int(line.split()[1])
         elif line.startswith("threads"):
             labels_line = lines[i + 1].strip()
             if "|" in labels_line:
                 xlabel, ylabel = labels_line.split("|")
-                cycles = [int(line.strip()) for line in lines[i + 2:] if line.strip().isdigit()]
-                break
+            cpu_cycles = np.zeros((measurements, iterations), dtype=int)
+        elif line.startswith("iteration "):
+            measurement = 0;
+            iteration += 1;
+        elif iteration >= 0:
+            cpu_cycles[measurement][iteration] = int(line.strip())
+            measurement += 1;
 
-    return cycles, xlabel, ylabel, granularity
+    return cpu_cycles, xlabel.strip(), ylabel.strip(), granularity
+
 
 def main():
     # Set up argument parser
-    parser = argparse.ArgumentParser(description="Plot benchmark data from a file.")
-    parser.add_argument('file_path', type=str, help="Path to the file containing benchmark data.")
+    parser = argparse.ArgumentParser(description="Plot benchmark data from multiple files.")
+    parser.add_argument('file_paths', type=str, nargs='+', help="Paths to the files containing benchmark data.")
     
     # Parse arguments
     args = parser.parse_args()
-    
-    # Read cycles, labels, and granularity from the file
-    cycles, xlabel, ylabel, granularity = read_cycles_from_file(args.file_path)
-    
-    if granularity is None:
-        print("Granularity not found in the file. Exiting.")
+
+    data = {}
+    xl, yl, gr, nm = None, None, None, None
+
+    # Read data from files and validate consistency
+    for file_path in args.file_paths:
+        cpu_cycles, xlabel, ylabel, granularity = parse_file(file_path)
+
+        num_measurements = len(cpu_cycles)
+
+        if xl is None:
+            xl, yl, gr, nm = xlabel, ylabel, granularity, num_measurements
+        else:
+            if (num_measurements > 1 and (xlabel != xl or ylabel != yl or granularity != gr or num_measurements != nm)):
+                print(f"Inconsistent data in file: {file_path}")
+                print(f"Expected: xlabel='{xl}', ylabel='{yl}', granularity={gr}, number of measurements={nm}")
+                print(f"Found: xlabel='{xlabel}', ylabel='{ylabel}', granularity={granularity}, number of measurements={num_measurements}")
+
+        data[file_path] = cpu_cycles 
+
+    if not data:
+        print("No valid data found. Exiting.")
         return
-    
+    if all(len(iterations) == 1 for iterations in data.values()):
+        merged_iterations = np.array([iterations[0] for iterations in data.values()])
+        data = {"Allocations": (merged_iterations)}
+        gr = 1
+
     # Plot the benchmark data
-    plot_benchmark(cycles, xlabel, ylabel, granularity)
+    plot_benchmark(data, gr, xl, yl)
+
 
 if __name__ == "__main__":
     main()
