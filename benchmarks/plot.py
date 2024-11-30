@@ -24,10 +24,10 @@ def plot_benchmark(data, granularity, xlabel, ylabel):
             measurements,
             cycles,
             yerr=std_devs,
-            fmt=marker_style,  # Marker style (only applies if data points are sparse)
+            fmt=marker_style,
             linestyle='-',
             label=os.path.basename(file_name),
-            capsize=3  # Add caps to the error bars
+            capsize=3
         )
 
     # Label the axes and title
@@ -59,25 +59,28 @@ def parse_file(file_path):
     iteration = -1
 
     for i, line in enumerate(lines):
-        if line.startswith("measurements"):
+        line = line.strip()
+        if line == "":
+            continue
+        elif line.startswith("measurements"):
             measurements = int(line.split()[1])
         elif line.startswith("granularity"):
             granularity = int(line.split()[1])
-        elif line.startswith("iterations"):
-            iterations = int(line.split()[1])
-        elif line.startswith("threads"):
-            labels_line = lines[i + 1].strip()
-            if "|" in labels_line:
-                xlabel, ylabel = labels_line.split("|")
-            cpu_cycles = np.zeros((measurements, iterations), dtype=int)
+        elif line.startswith("iteration 0:"):
+            cpu_cycles = [[] for _ in range(measurements)]
+            iteration = 0
+        elif line.startswith("xlabel"):
+            xlabel = " ".join(line.split()[1:])
+        elif line.startswith("ylabel"):
+            ylabel =  " ".join(line.split()[1:])
         elif line.startswith("iteration "):
             measurement = 0;
             iteration += 1;
         elif iteration >= 0:
-            cpu_cycles[measurement][iteration] = int(line.strip())
+            cpu_cycles[measurement].append(int(line))
             measurement += 1;
 
-    return cpu_cycles, xlabel.strip(), ylabel.strip(), granularity
+    return np.array(cpu_cycles), xlabel, ylabel, granularity
 
 
 def main():
