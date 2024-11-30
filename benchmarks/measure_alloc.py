@@ -1,11 +1,14 @@
+import signal
 import argparse
 import subprocess
+import os
+import sys
 
-def run_benchmarks(file_path, output_file=None):
-    # Clear the output file if it is specified
-    if output_file:
-        with open(output_file, 'w') as out_file:
-            pass  # Just open and close to empty the file
+def run_benchmarks(file_path, format_string, use_stdout=False):
+    # Create the output directory if not using stdout
+    output_dir = "out"
+    if not use_stdout:
+        os.makedirs(output_dir, exist_ok=True)
 
     with open(file_path, 'r') as file:
         for line in file:
@@ -15,11 +18,25 @@ def run_benchmarks(file_path, output_file=None):
                 continue
 
             # Parse the line
-            benchmark, vcpus, threads, memsize, iterations, measurements, granularity= line.split()
-        
+            benchmark, vcpus, threads, memsize, iterations, measurements, granularity = line.split()
+
+            # Use the provided format string or default one
+            output_file_path = os.path.join(
+                output_dir,
+                format_string.format(
+                    benchmark=benchmark,
+                    vcpus=int(vcpus),
+                    threads=int(threads),
+                    memsize=memsize,
+                    iterations=iterations,
+                    measurements=measurements,
+                    granularity=granularity
+                )
+            )
+           
             # Build the command
             command = (
-                f"taskset -c 64-{64+int(vcpus)-1} "
+                f"taskset -c 64-{64 + int(vcpus) - 1} "
                 f"../osv/scripts/run.py --novnc "
                 f"--vcpus {vcpus} "
                 f"--memsize {memsize} "
@@ -29,47 +46,65 @@ def run_benchmarks(file_path, output_file=None):
             # Print the command to verify
             print(f"Executing: {command}")
 
-            # Execute the command
             try:
-                result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                # Open the process in a new process group
+                process = subprocess.Popen(
+                    command,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    preexec_fn=os.setsid  # Start the process in a new session
+                )
 
-                # Capture all output lines
-                output_lines = result.stdout.splitlines()
-
-                # Find the first line starting with "OSv"
-                start_recording = False
                 filtered_output = []
 
-                for line in output_lines:
-                    if start_recording:
-                        filtered_output.append(line)
-                    elif line.startswith("OSv"):
-                        start_recording = True
+                # Stream the output line-by-line
+                for line in process.stdout:
+                    line = line.strip()
+                    if any(keyword in line for keyword in ["[backtrace]", "Out of memory", "page fault"]):
+                        print(f"[ERROR] Detected error in output: {line}")
+                        # Terminate the process group
+                        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                        sys.exit(1)
+                    elif line.startswith("OSv") or len(filtered_output) > 0:
                         filtered_output.append(line)
 
-                # If output file is specified, append filtered output to the file
-                if output_file and filtered_output:
-                    with open(output_file, 'a') as out_file:
-                        for filtered_line in filtered_output:
-                            out_file.write(filtered_line + '\n')
-                        out_file.write('\n')
+                # Wait for process to terminate
+                process.wait()
 
-                # Optionally print the filtered output to console
-                if not output_file and filtered_output:
-                    print("\n".join(filtered_output))
+                # Write or print the output based on the flag
+                if use_stdout:
+                    if filtered_output:
+                        print("\n".join(filtered_output))
+                else:
+                    if filtered_output:
+                        with open(output_file_path, 'w') as out_file:
+                            out_file.write("\n".join(filtered_output) + '\n')
 
             except subprocess.CalledProcessError as e:
                 print(f"Error executing command: {command}")
                 print(e)
+                sys.exit(1)  # Exit with an error code for the error
+
+            except Exception as e:
+                # Terminate the process group if an exception occurs
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                print(f"An error occurred: {e}")
+                sys.exit(1)
 
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Run benchmarks from a file.")
     parser.add_argument("bench_file", help="Path to the bench file.")
-    parser.add_argument("-o", "--output", help="File to write filtered outputs (after 'OSv').", default=None)
+    parser.add_argument("--stdout", action="store_true", help="Print output to stdout instead of files.")
+    parser.add_argument("--format", type=str, help="Specify a custom format string for output filenames.")
 
     args = parser.parse_args()
 
-    # Run the benchmarks
-    run_benchmarks(args.bench_file, args.output)
+    # Default format string if none provided
+    default_format = "{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}"
+
+    # Run the benchmarks with the custom or default format
+    run_benchmarks(args.bench_file, args.format or default_format, args.stdout)
 
