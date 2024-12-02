@@ -9,6 +9,7 @@ The combination of python scripts currently supports plotting in 2 different way
 ```bash
 python3 measure_alloc.py alloc.conf
 ```
+* In case of merging multiple files into one graph, the ordering of files passed to the `plot.py` script will determine the order of measurements in the graph. To keep using wildcards in this scenario. `--format "<python format string>"` may be used to fix the file ordering for your use case.
 
 ### Benchmarking NVMe driver in currently built kernel
 * The following command will produce a `out` directory a file for each benchmark specified in `nvme.conf`
@@ -17,13 +18,8 @@ python3 measure_nvme.py nvme.conf
 ```
 
 ### Plot an output
-* The following will produce a plot containing all specified benchmark outputs, if
-    * Every input file contains a line starting with `granularity`
-    * Every input file contains the x and y label for the plot separated by a `|` in the last line before the values begin
-    * Every input file only has one measurement, or
-        * The granularities of all files match
-        * The x and y label of all files match
-        * The amount of measurements of all files match
+* The following will produce a plot containing all specified benchmark outputs
 ```bash
 python4 plot.py <input files (benchmark output files, e.g. ./out/*)>
 ```
+* The `--granularity` parameter may be used to specify a custom granularity, like `--granularity 1-24,32,40,48,56,64`
