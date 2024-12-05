@@ -3,14 +3,14 @@ import argparse
 import sys
 import re
 import shlex
-import subprocess
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from pathlib import Path
 from textwrap import dedent
 from enum import Enum
 from enum import auto as enumAuto
 
-gnuParser = argparse.ArgumentParser(description='parse gnu toolkits commands')
+gnuParser = argparse.ArgumentParser(
+    description='parse gnu toolkits commands')
 gnuParser.add_argument('sources', nargs='*')
 
 
@@ -34,7 +34,7 @@ def echo(obj):
     return obj
 
 
-invalidFilenameChars = re.compile('[<>:"/?*\\|]')
+invalidFilenameChars = re.compile(r'[<>:"/?*\\|]')
 
 
 def is_valid_filename(filename):
@@ -46,8 +46,10 @@ if __name__ == "__main__":
         description='generate compile_commands.json.')
     argsParser.add_argument('-f', '--makefile', default=None,
                             help="specify makefile, leave it empty to parse the makefile under current folder")
+    argsParser.add_argument('-t', '--targets', nargs='+', required=True,
+                            help="specify the targets to build (e.g., 'all')")
     argsParser.add_argument('-c', '--compilers', nargs='*',
-                            default=['gcc', 'g++', 'clang', 'clang++'],
+                            default=['gcc', 'g++', 'clang', 'clang++', 'cc'],
                             help="specify the compiler executable names")
 
     args = argsParser.parse_args()
@@ -55,72 +57,60 @@ if __name__ == "__main__":
     compilers = args.compilers
 
     currentDir = Path().resolve()
-    makefile = Path(args.makefile if args.makefile is not None else './makefile')
-
-    targets = set()
-
-    with makefile.open('r') as mf:
-        for line in mf:
-            result = re.search(r'^\s*(\w+)\s*:.*$', line)
-            if result is not None:
-                targets.add(result.group(1))
+    makefile = Path(args.makefile) if args.makefile else Path('Makefile')
 
     compileCmds = {}
 
-    for target in targets:
-        makeCmd = ['make', target, '--just-print', 'GEN_COMPILE_COMMANDS=true']
-        if args.makefile is not None:
-            makeCmd.extend(['-f', args.makefile])
-        try:
-            output = Popen(makeCmd, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").split('\n')
-        except Exception as e:
-            log(f"Error running make command: {e}", LOG_LEVEL.ERROR)
-            continue
+    for target in args.targets:
+        # Build the make command
+        makeCmd = ['make', target, '--just-print']
+        if args.makefile:
+            makeCmd.extend(['-f', str(makefile)])
 
-        for command in output:
-            # Fix utf-8 BOM issue in Windows shell
-            command = re.sub(r'^\ufeff', '', command).strip()
-            if not command:
+        # Run make and capture the output
+        process = Popen(makeCmd, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        output = stdout.decode('utf-8')
+
+        # Parse each line of the make output
+        for line in output.splitlines():
+            line = line.strip()
+            if not line:
                 continue
 
-            try:
-                commandSeg = shlex.split(command)
-            except ValueError as e:
-                log(dedent(f"""\
-                    Error parsing command:
-                        {command}
-                    Error: {e}
-                    Skipping this command.
-                """), LOG_LEVEL.ERROR)
+            # Split the line into command segments
+            commandSeg = shlex.split(line)
+            if len(commandSeg) == 0 or commandSeg[0] not in compilers:
                 continue
 
-            if commandSeg[0] in compilers:
-                info, _ = gnuParser.parse_known_args(commandSeg[1:])
-                for source in info.sources:
-                    if not is_valid_filename(source):
-                        log(dedent(f"""\
-                            Filename "{source}" in command:
-                                {command}
-                            is not a valid filename.
-                            Skipping this command.
+            # Parse the compile command to extract source files
+            info, _ = gnuParser.parse_known_args(commandSeg[1:])
+            for source in info.sources:
+                if not is_valid_filename(source):
+                    log(dedent(f"""\
+                        filename "{source}" in command
+                            {line}
+                        is not a valid filename.
+                        Skipping this command.
                         """), LOG_LEVEL.ERROR)
-                        continue
-                    if source not in compileCmds:
-                        try:
-                            compileCmds[source] = {
-                                "directory": str(currentDir.resolve()),
-                                "command": command,
-                                "file": str((currentDir / source).resolve())
-                            }
-                        except OSError as err:
-                            log(dedent(f"""\
-                                During parsing of command:
-                                    {command}
-                                An error occurred:
-                                    {err}
-                                Skipping this command.
+                    continue
+                if source not in compileCmds:
+                    try:
+                        compileCmds[source] = {
+                            "directory": str(currentDir.resolve()),
+                            "command": line,
+                            "file": str((currentDir / source).resolve())
+                        }
+                    except OSError as err:
+                        log(dedent(f"""\
+                            during parsing of command
+                                {line}
+                            an error occurred:
+                                {err}
+                            Skipping this command.
                             """), LOG_LEVEL.ERROR)
 
+    # Write the compile_commands.json file
     with Path('./compile_commands.json').open('w+') as resultFile:
-        print(json.dumps([*compileCmds.values()], indent=4), file=resultFile)
+        json.dump([*compileCmds.values()], resultFile, indent=4)
 
