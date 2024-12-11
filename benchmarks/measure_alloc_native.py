@@ -33,10 +33,8 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
             for iteration in range(int(iterations)):
                 command = (
                     f"taskset -c 32-{32 + int(vcpus) - 1} "
-                    f"../osv/scripts/run.py --novnc --nogdb "
-                    f"--vcpus {vcpus} "
-                    f"--memsize {memsize} "
-                    f"-e \"{benchmark} -t {threads} -m {measurements} -g {granularity}\""
+                    f"../osv/benchmarks/micro/{benchmark} "
+                    f"-t {threads} -m {measurements} -g {granularity}"
                 )
 
                 print(f"Executing (iteration {iteration + 1}/{iterations}): {command}")
@@ -55,14 +53,10 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
 
                     for line in process.stdout:
                         line = line.strip()
-                        if any(keyword in line for keyword in ["[backtrace]", "Out of memory", "page fault"]):
-                            print(f"[ERROR] Detected error in output: {line}")
-                            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-                            sys.exit(1)
-                        elif (line.startswith("OSv") and iteration == 0):
-                            filtered_output.append(line)
-                        elif line.startswith("out"):
+                        if line.startswith("out"):
                             filtered_output.append(f"iteration {iteration}:\n")
+                        elif (iteration == 0):
+                            filtered_output.append(line)
                         elif len(filtered_output) > 0:
                             filtered_output.append(line)
 
@@ -94,7 +88,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    default_format = "{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}"
+    default_format = "native_{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}"
 
     run_benchmarks(args.bench_file, args.format or default_format, args.stdout)
 
