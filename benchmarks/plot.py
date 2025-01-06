@@ -20,8 +20,19 @@ def parse_granularity(granularity_str):
 
     return granularity_list
 
-def plot_benchmark(data, granularity, xlabel, ylabel):
-    plt.figure(figsize=(10, 6))
+def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev):
+    # Configure font sizes for better readability
+    plt.rcParams.update({
+        'font.size': 12,          # General font size
+        'axes.titlesize': 14,     # Title font size
+        'axes.labelsize': 12,     # Axis label font size
+        'xtick.labelsize': 10,    # X-axis tick font size
+        'ytick.labelsize': 10,    # Y-axis tick font size
+        'legend.fontsize': 10,    # Legend font size
+    })
+
+    # Create a plot with half a DIN A4 page width (4.13 inches) and height 3 inches
+    plt.figure(figsize=(4.13, 3))
 
     for file_name, cpu_cycles in data.items():
         # Handle different types of granularity (number or list)
@@ -36,37 +47,37 @@ def plot_benchmark(data, granularity, xlabel, ylabel):
         cycles = cpu_cycles.mean(axis=1)
         std_devs = np.std(cpu_cycles, axis=1)
 
-        # Plot standard deviation first (in gray, no lines)
-        plt.errorbar(
-            measurements,
-            cycles,
-            yerr=std_devs,
-            fmt='o',
-            color='black',
-            alpha=0.3,
-            capsize=3,
-            # label=f'{os.path.basename(file_name)} (std dev)' if len(data) == 1 else None
-        )
+        if(stddev):
+            # Plot standard deviation first (in gray, no lines)
+            plt.errorbar(
+                measurements,
+                cycles,
+                yerr=std_devs,
+                fmt='none',
+                color='black',
+                alpha=0.3,
+                capsize=3,
+            )
 
         plt.plot(
             measurements,
             cycles,
-            'o-',  # 'o' for points and '-' for the line
-            color='blue',
+            ('o-' if stddev else '-'),  # 'o' for points and '-' for the line
             label=os.path.basename(file_name)
         )
 
-    # Label the axes and title
-    plt.xlabel(xlabel)
+    # Label the axes and add a legend
     plt.ylabel(ylabel)
-    plt.title(f"Benchmark: {ylabel} per {xlabel}")
-
-    # Add grid and legend for better readability
+    plt.xlabel(xlabel)
+    plt.title(title)
     plt.grid(True)
     plt.legend()
 
+    # Adjust layout to ensure labels are not cut off
+    plt.tight_layout()
+
     # Save and display the plot
-    plt.savefig("benchmark_plot.png", format="png")
+    plt.savefig("benchmark_plot.png", format="png", dpi=300)  # High DPI for quality
     plt.show()
 
 def parse_file(file_path):
@@ -112,6 +123,12 @@ def main():
     parser = argparse.ArgumentParser(description="Plot benchmark data from multiple files.")
     parser.add_argument('file_paths', type=str, nargs='+', help="Paths to the files containing benchmark data.")
     parser.add_argument('-g', '--granularity', type=str, default=None, help="Granularity (single number, list of numbers, or range)")
+    parser.add_argument('-x', '--xlabel', type=str, default=None, help="Override for X-axis label")
+    parser.add_argument('-y', '--ylabel', type=str, default=None, help="Override for Y-axis label")
+    parser.add_argument('-l', '--label', type=str, default="Page Allocation", help="Custom label for the plot")
+    parser.add_argument('-t', '--title', type=str, default=None, help="Custom title for the plot")
+    parser.add_argument('-s', '--stddev', action='store_true', help="Show standard deviation on the plot")
+
 
     # Parse arguments
     args = parser.parse_args()
@@ -137,13 +154,20 @@ def main():
 
         if xl is None:
             xl, yl, gr, nm = xlabel, ylabel, file_granularity, num_measurements
+            if (args.xlabel):
+                xl = args.xlabel
+            if (args.ylabel):
+                yl = args.ylabel
         else:
             if (num_measurements > 1 and (xlabel != xl or ylabel != yl or file_granularity != gr or num_measurements != nm)):
                 print(f"Inconsistent data in file: {file_path}")
                 print(f"Expected: xlabel='{xl}', ylabel='{yl}', granularity={gr}, number of measurements={nm}")
                 print(f"Found: xlabel='{xlabel}', ylabel='{ylabel}', granularity={file_granularity}, number of measurements={num_measurements}")
 
-        data[file_path] = cpu_cycles
+        if(len(args.file_paths) == 1):
+            data[args.label] = cpu_cycles
+        else:
+            data[file_path] = cpu_cycles
 
     if not data:
         print("No valid data found. Exiting.")
@@ -151,11 +175,13 @@ def main():
 
     if all(len(iterations) == 1 for iterations in data.values()):
         merged_iterations = np.array([iterations[0] for iterations in data.values()])
-        data = {"Allocations": (merged_iterations)}
+        data = {args.label: (merged_iterations)}
         gr = 1
 
+    
+
     # Plot the benchmark data with the specified granularity
-    plot_benchmark(data, granularity or gr, xl, yl)
+    plot_benchmark(data, granularity or gr, args.title, xl, yl, args.stddev)
 
 if __name__ == "__main__":
     main()
