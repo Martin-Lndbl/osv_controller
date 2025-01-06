@@ -4,8 +4,7 @@ import subprocess
 import os
 import sys
 
-def run_benchmarks(file_path, format_string, use_stdout=False):
-    output_dir = "out"
+def run_benchmarks(file_path, format_string, use_stdout=False, output_dir = "out"):
     if not use_stdout:
         os.makedirs(output_dir, exist_ok=True)
 
@@ -32,7 +31,7 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
 
             for iteration in range(int(iterations)):
                 command = (
-                    f"taskset -c 32-{32 + int(vcpus) - 1} "
+                    f"taskset -c 0-{0 + int(vcpus) - 1} "
                     f"../osv/benchmarks/micro/{benchmark} "
                     f"-t {threads} -m {measurements} -g {granularity}"
                 )
@@ -85,10 +84,11 @@ if __name__ == "__main__":
     parser.add_argument("bench_file", help="Path to the bench file.")
     parser.add_argument("--stdout", action="store_true", help="Print output to stdout instead of files.")
     parser.add_argument("--format", type=str, help="Specify a custom format string for output filenames.")
+    parser.add_argument("--out", type=str, help="Specify a output directory.")
 
     args = parser.parse_args()
 
     default_format = "native_{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}"
 
-    run_benchmarks(args.bench_file, args.format or default_format, args.stdout)
+    run_benchmarks(args.bench_file, args.format or default_format, args.stdout, args.out)
 
