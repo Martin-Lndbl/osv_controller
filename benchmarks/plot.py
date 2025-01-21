@@ -73,6 +73,8 @@ def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev):
     plt.grid(True)
     plt.legend()
 
+    # plt.yscale('log')
+
     # Adjust layout to ensure labels are not cut off
     plt.tight_layout()
 

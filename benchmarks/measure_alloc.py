@@ -3,11 +3,14 @@ import argparse
 import subprocess
 import os
 import sys
+import time
 
 def run_benchmarks(file_path, format_string, use_stdout=False):
     output_dir = "out"
     if not use_stdout:
         os.makedirs(output_dir, exist_ok=True)
+
+    t=time.time_ns()
 
     with open(file_path, 'r') as file:
         for line in file:
@@ -15,18 +18,20 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
             if not line or line.startswith("#"):
                 continue
 
-            benchmark, vcpus, threads, memsize, iterations, measurements, granularity = line.split()
+            benchmark, vcpus, threads, memsize, iterations, measurements, granularity, size = line.split()
 
             output_file_path = os.path.join(
                 output_dir,
                 format_string.format(
+                    time=t,
                     benchmark=benchmark,
                     vcpus=int(vcpus),
                     threads=int(threads),
                     memsize=memsize,
                     iterations=iterations,
                     measurements=measurements,
-                    granularity=granularity
+                    granularity=granularity,
+                    size=int(size)
                 )
             )
 
@@ -36,7 +41,7 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
                     f"../osv/scripts/run.py --novnc --nogdb "
                     f"--vcpus {vcpus} "
                     f"--memsize {memsize} "
-                    f"-e \"{benchmark} -t {threads} -m {measurements} -g {granularity}\""
+                    f"-e \"{benchmark} -t {threads} -m {measurements} -g {granularity} -s {size}\""
                 )
 
                 print(f"Executing (iteration {iteration + 1}/{iterations}): {command}")
@@ -94,7 +99,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    default_format = "{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}"
+    default_format = "{time}_{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}_{size}"
 
     run_benchmarks(args.bench_file, args.format or default_format, args.stdout)
 
