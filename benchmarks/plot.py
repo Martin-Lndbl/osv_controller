@@ -20,7 +20,7 @@ def parse_granularity(granularity_str):
 
     return granularity_list
 
-def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev):
+def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev, log):
     # Configure font sizes for better readability
     plt.rcParams.update({
         'font.size': 12,          # General font size
@@ -72,6 +72,9 @@ def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev):
     plt.title(title)
     plt.grid(True)
     plt.legend()
+
+    if(log):
+        plt.yscale('log')
 
     # Adjust layout to ensure labels are not cut off
     plt.tight_layout()
@@ -128,6 +131,7 @@ def main():
     parser.add_argument('-l', '--label', type=str, default="Page Allocation", help="Custom label for the plot")
     parser.add_argument('-t', '--title', type=str, default=None, help="Custom title for the plot")
     parser.add_argument('-s', '--stddev', action='store_true', help="Show standard deviation on the plot")
+    parser.add_argument('-e', '--log', action='store_true', help="Show y axis with logarithmic scale")
 
 
     # Parse arguments
@@ -181,7 +185,7 @@ def main():
     
 
     # Plot the benchmark data with the specified granularity
-    plot_benchmark(data, granularity or gr, args.title, xl, yl, args.stddev)
+    plot_benchmark(data, granularity or gr, args.title, xl, yl, args.stddev, args.log)
 
 if __name__ == "__main__":
     main()
