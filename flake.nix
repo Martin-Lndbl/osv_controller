@@ -46,6 +46,7 @@
             libgcc # Compiler
             libtool
             libvirt
+            libmemcached
             lua53Packages.lua
             ncurses
             pax-utils # elf security library
@@ -62,6 +63,8 @@
             krb5.out
             libselinux
             libz
+            libevent # Required to build memcached
+            tcl
             boost175
             #glibc.static
             unixODBC
@@ -74,6 +77,7 @@
             pkg-config
             flex
             bison
+            icu
           ];
 
           buildInputs = with pkgs; [
@@ -97,17 +101,15 @@
 
           CAPSTAN_QEMU_PATH = "${pkgs.qemu}/bin/qemu-system-x86_64";
 
-          /*
-            shellHook = ''
-              mkdir $TMP/openssl-all
-              ln -rsf ${pkgs.openssl}/* $TMP/openssl-all
-              ln -rsf ${pkgs.openssl.dev}/* $TMP/openssl-all
-              ln -rsf ${pkgs.openssl.out}/* $TMP/openssl-all
-              export OPENSSL_DIR="$TMP/openssl-all";
-              export OPENSSL_LIB_PATH="$TMP/openssl-all/lib";
-
-            '';
-          */
+          # shellHook = ''
+          #   mkdir $TMP/openssl-all
+          #   ln -rsf ${pkgs.osv-ssl}/* $TMP/openssl-all
+          #   ln -rsf ${pkgs.openssl.dev}/* $TMP/openssl-all
+          #   ln -rsf ${pkgs.openssl.out}/* $TMP/openssl-all
+          #   export OPENSSL_DIR="$TMP/openssl-all";
+          #   export OPENSSL_LIB_PATH="$TMP/openssl-all/lib";
+          #
+          # '';
         };
       }
     );

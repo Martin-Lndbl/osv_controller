@@ -23,12 +23,14 @@ def parse_granularity(granularity_str):
 def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev, log):
     # Configure font sizes for better readability
     plt.rcParams.update({
-        'font.size': 12,          # General font size
-        'axes.titlesize': 14,     # Title font size
-        'axes.labelsize': 12,     # Axis label font size
-        'xtick.labelsize': 10,    # X-axis tick font size
-        'ytick.labelsize': 10,    # Y-axis tick font size
-        'legend.fontsize': 10,    # Legend font size
+        'font.family': 'serif',          # Use serif font
+        'font.serif': ['Times New Roman', 'Georgia', 'DejaVu Serif'],  # Palatino alternatives
+        'font.size': 12,                 # General font size
+        'axes.titlesize': 14,            # Title font size
+        'axes.labelsize': 12,            # Axis label font size
+        'xtick.labelsize': 10,           # X-axis tick font size
+        'ytick.labelsize': 10,           # Y-axis tick font size
+        'legend.fontsize': 10,           # Legend font size
     })
 
     # Create a plot with half a DIN A4 page width (4.13 inches) and height 3 inches
@@ -80,7 +82,7 @@ def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev, log):
     plt.tight_layout()
 
     # Save and display the plot
-    plt.savefig("benchmark_plot.png", format="png", dpi=300)  # High DPI for quality
+    plt.savefig("benchmark_plot.pdf", format="pdf", dpi=300)  # High DPI for quality
     plt.show()
 
 def parse_file(file_path):
