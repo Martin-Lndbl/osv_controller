@@ -4,6 +4,7 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "nixpkgs/nixos-unstable";
+    nixpkgs-2311.url = "github:nixos/nixpkgs?ref=23.11";
     nixpkgs-2211.url = "github:nixos/nixpkgs?ref=22.11";
   };
 
@@ -12,6 +13,7 @@
       self,
       nixpkgs,
       nixpkgs-2211,
+      nixpkgs-2311,
       flake-utils,
     }@inputs:
     flake-utils.lib.eachDefaultSystem (
@@ -41,19 +43,20 @@
             # glibc.static
             gnumake
             gnupatch
-            # gen_compile_commands
+            gen_compile_commands
             flamegraph # code hierarchy visualization
             libedit
             libgcc # Compiler
             libtool
             libvirt
-            libmemcached
+            libz
             lua53Packages.lua
             ncurses
             pkg-config
             pax-utils # elf security library
             pyright
             python3
+            python312Packages.numpy
             python312Packages.requests
             python312Packages.matplotlib
             p11-kit # PKCS#11 loader
@@ -61,28 +64,11 @@
             readline # interactive line editing
             unzip
             zulu8 # Java jdk
-            clang
-            osv-ssl
-            osv-ssl-hdr
-            yaml-cpp
-            xz.out
-            krb5.out
-            libselinux
-            libz
-            libevent # Required to build memcached
-            tcl
-            #glibc.static
-            unixODBC
-            numactl
-            python3
-            python311Packages.requests
-            python311Packages.numpy
-            python311Packages.pandas
-            python311Packages.matplotlib
-            pkg-config
             flex
+            pkg-config
             bison
             icu
+            tcl
           ];
 
           buildInputs = with pkgs; [
@@ -90,45 +76,34 @@
             readline # interactive line editing
             libaio # I/O library
             openssl # SSL/TLS library
+            osv-ssl
+            osv-ssl-hdr
             clang-tools_18 # language server
           ];
 
           LD_LIBRARY_PATH = "${pkgs.readline}/lib";
           LUA_LIB_PATH = "${pkgs.lua53Packages.lua}/lib";
           GOMP_DIR = pkgs.libgcc.lib;
-
-          boost_base = "${pkgs.osv-boost}";
-          # BOOST_SO_DIR = "${pkgs.boost175}/lib";
-          OPENSSL_DIR = "${pkgs.osv-ssl}";
-          OPENSSL_HDR = "${pkgs.osv-ssl-hdr}/include";
-          KRB5_DIR = "${pkgs.krb5.out}";
-          XZ_DIR = "${pkgs.xz.out}";
-          LIBZ_DIR = "${pkgs.libz}";
+          BOOST_SO_DIR = "${pkgs.boost175}/lib";
 
           CAPSTAN_QEMU_PATH = "${pkgs.qemu}/bin/qemu-system-x86_64";
 
-          # shellHook = ''
-          #   # /bin/bash --version >/dev/null 2>&1 || {
-          #   #   echo >&2 "Error: /bin/bash is required but was not found.  Aborting."
-          #   #   echo >&2 "If you're on NixOs, consider using https://github.com/Mic92/envfs."
-          #   #   exit 1
-          #   #   }
-          #
-          #   export OSV_BASE=$(git rev-parse --show-toplevel)
-          #   export OSV_BUILD_PATH=$OSV_BASE/build/release.x64
-          #
-          #   mkdir $TMP/openssl-all
-          #   ln -rsf ${pkgs.openssl}/* $TMP/openssl-all
-          #   ln -rsf ${pkgs.openssl.dev}/* $TMP/openssl-all
-          #   ln -rsf ${pkgs.openssl.out}/* $TMP/openssl-all
-          #   export OPENSSL_DIR="$TMP/openssl-all";
-          #   export OPENSSL_LIB_PATH="$TMP/openssl-all/lib";
-          #
-          #   mkdir $TMP/libboost
-          #   export boost_base="$TMP/libboost"
-          #   ln -s ${pkgs.osv-boost}/lib/* $TMP/libboost/
-          #   for file in $TMP/libboost/*-x64*; do mv "$file" "''${file//-x64/}"; done
-          # '';
+          shellHook = ''
+            export OSV_BASE=$(git rev-parse --show-toplevel)
+            export OSV_BUILD_PATH=$OSV_BASE/build/release.x64
+
+            mkdir $TMP/openssl-all
+            ln -rsf ${pkgs.openssl}/* $TMP/openssl-all
+            ln -rsf ${pkgs.openssl.dev}/* $TMP/openssl-all
+            ln -rsf ${pkgs.openssl.out}/* $TMP/openssl-all
+            export OPENSSL_DIR="$TMP/openssl-all";
+            export OPENSSL_LIB_PATH="$TMP/openssl-all/lib";
+
+            mkdir $TMP/libboost
+            export boost_base="$TMP/libboost"
+            ln -s ${pkgs.osv-boost}/lib/* $TMP/libboost/
+            for file in $TMP/libboost/*-x64*; do mv "$file" "''${file//-x64/}"; done
+          '';
         };
       }
     );

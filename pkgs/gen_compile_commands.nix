@@ -1,6 +1,6 @@
 {
+  compiledb,
   writeScriptBin,
-  python312Packages,
 }:
 
 writeScriptBin "osv_compile_commands" ''
@@ -14,8 +14,8 @@ writeScriptBin "osv_compile_commands" ''
   make_output=$(mktemp)
 
   ./scripts/build clean
-  ./scripts/build image=$1 V=1 > $make_output
-  ${python312Packages.compiledb}/bin/compiledb --parse $make_output
+  ./scripts/build -j $(nproc) image=$1 V=1 > $make_output
+  ${compiledb}/bin/compiledb --parse $make_output
 ''
 
 # writeScriptBin "gen_compile_commands" (builtins.readFile ./gen_compile_commands.sh)

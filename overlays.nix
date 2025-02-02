@@ -2,7 +2,8 @@
 
 final: _prev: {
   capstan = _prev.callPackage ./pkgs/capstan.nix { };
-  osv-boost = _prev.boost.override {
+  boost175 = inputs.nixpkgs-2311.legacyPackages.${_prev.system}.boost175;
+  osv-boost = inputs.nixpkgs-2311.legacyPackages.${_prev.system}.boost.override {
     enableStatic = true;
     enableShared = false;
   };
