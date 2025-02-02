@@ -3,7 +3,7 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:nixos/nixpkgs?ref=23.11";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
     nixpkgs-2211.url = "github:nixos/nixpkgs?ref=22.11";
   };
 
@@ -22,10 +22,13 @@
           overlays = [ (import ./overlays.nix { inherit inputs; }) ];
         };
       in
-      #glibc-2-38 = inputs.nixpkgs-2311.legacyPackages.${pkgs.system}.glibc.all;
       {
+        packages.capstan = pkgs.capstan;
+
         devShell = pkgs.mkShell {
 
+          # Don't add glib.static here - As there is an issue with wcslen defined twice.
+          # If you want to use statically linked executables, build them manually before calling ./scripts/build
           nativeBuildInputs = with pkgs; [
             ack # grep tool
             ant # java dev lib
@@ -34,13 +37,11 @@
             bash
             binutils
             bisoncpp
-            gcc13
-            libgcc
             gdb # gnu debugger
-            cmake
+            # glibc.static
             gnumake
             gnupatch
-            gen_compile_commands
+            # gen_compile_commands
             flamegraph # code hierarchy visualization
             libedit
             libgcc # Compiler
@@ -49,7 +50,12 @@
             libmemcached
             lua53Packages.lua
             ncurses
+            pkg-config
             pax-utils # elf security library
+            pyright
+            python3
+            python312Packages.requests
+            python312Packages.matplotlib
             p11-kit # PKCS#11 loader
             qemu_full # hypervisor
             readline # interactive line editing
@@ -65,7 +71,6 @@
             libz
             libevent # Required to build memcached
             tcl
-            boost175
             #glibc.static
             unixODBC
             numactl
@@ -84,15 +89,16 @@
             osv-boost # C++ libraries
             readline # interactive line editing
             libaio # I/O library
-            osv-ssl # SSL/TLS library
-            clang-tools # language server
+            openssl # SSL/TLS library
+            clang-tools_18 # language server
           ];
 
           LD_LIBRARY_PATH = "${pkgs.readline}/lib";
           LUA_LIB_PATH = "${pkgs.lua53Packages.lua}/lib";
           GOMP_DIR = pkgs.libgcc.lib;
+
           boost_base = "${pkgs.osv-boost}";
-          BOOST_SO_DIR = "${pkgs.boost175}/lib";
+          # BOOST_SO_DIR = "${pkgs.boost175}/lib";
           OPENSSL_DIR = "${pkgs.osv-ssl}";
           OPENSSL_HDR = "${pkgs.osv-ssl-hdr}/include";
           KRB5_DIR = "${pkgs.krb5.out}";
@@ -102,25 +108,28 @@
           CAPSTAN_QEMU_PATH = "${pkgs.qemu}/bin/qemu-system-x86_64";
 
           # shellHook = ''
+          #   # /bin/bash --version >/dev/null 2>&1 || {
+          #   #   echo >&2 "Error: /bin/bash is required but was not found.  Aborting."
+          #   #   echo >&2 "If you're on NixOs, consider using https://github.com/Mic92/envfs."
+          #   #   exit 1
+          #   #   }
+          #
+          #   export OSV_BASE=$(git rev-parse --show-toplevel)
+          #   export OSV_BUILD_PATH=$OSV_BASE/build/release.x64
+          #
           #   mkdir $TMP/openssl-all
-          #   ln -rsf ${pkgs.osv-ssl}/* $TMP/openssl-all
+          #   ln -rsf ${pkgs.openssl}/* $TMP/openssl-all
           #   ln -rsf ${pkgs.openssl.dev}/* $TMP/openssl-all
           #   ln -rsf ${pkgs.openssl.out}/* $TMP/openssl-all
           #   export OPENSSL_DIR="$TMP/openssl-all";
           #   export OPENSSL_LIB_PATH="$TMP/openssl-all/lib";
           #
+          #   mkdir $TMP/libboost
+          #   export boost_base="$TMP/libboost"
+          #   ln -s ${pkgs.osv-boost}/lib/* $TMP/libboost/
+          #   for file in $TMP/libboost/*-x64*; do mv "$file" "''${file//-x64/}"; done
           # '';
         };
       }
     );
 }
-#/bin/bash --version >/dev/null 2>&1 || {
-# echo >&2 "Error: /bin/bash is required but was not found.  Aborting."
-#echo >&2 "If you're on NixOs, consider using https://github.com/Mic92/envfs."
-#exit 1
-#}
-
-#mkdir $TMP/libboost
-#ln -s ${pkgs.osv-boost}/lib/* $TMP/libboost/
-#for file in $TMP/libboost/*-x64*; do mv "$file" "''${file//-x64/}"; done
-#export boost_base="$TMP/libboost"
