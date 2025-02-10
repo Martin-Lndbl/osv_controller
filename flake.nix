@@ -42,6 +42,7 @@
             gdb # gnu debugger
             # glibc.static
             gnumake
+            cmake
             gnupatch
             gen_compile_commands
             flamegraph # code hierarchy visualization
@@ -69,6 +70,8 @@
             bison
             icu
             tcl
+            libuuid.dev
+            curl.dev
           ];
 
           buildInputs = with pkgs; [
@@ -81,10 +84,12 @@
             clang-tools_18 # language server
           ];
 
-          LD_LIBRARY_PATH = "${pkgs.readline}/lib";
+          LD_LIBRARY_PATH = "${pkgs.readline}/lib:${pkgs.libz}/lib";
           LUA_LIB_PATH = "${pkgs.lua53Packages.lua}/lib";
           GOMP_DIR = pkgs.libgcc.lib;
           BOOST_SO_DIR = "${pkgs.boost175}/lib";
+
+          LIBZ_DIR="${pkgs.libz}";
 
           CAPSTAN_QEMU_PATH = "${pkgs.qemu}/bin/qemu-system-x86_64";
 
