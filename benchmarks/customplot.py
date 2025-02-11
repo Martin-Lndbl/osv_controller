@@ -109,9 +109,9 @@ def leveldb_64():
                    labels=labels, 
                    categories=categories,
                    cap=40000,
-                   title="LevelDB 64 Cores", 
-                   xlabel="Categories", 
-                   ylabel="micros/op", 
+                   title="LevelDB 64 Cores",
+                   xlabel="Categories",
+                   ylabel="micros/op",
                    output_file="leveldb64.pdf"
            )
 
@@ -141,10 +141,46 @@ def leveldb_64_val2000():
                    labels=labels, 
                    categories=categories,
                    cap=0,
-                   title="LevelDB 64 Cores 2000B Values", 
-                   xlabel="Categories", 
-                   ylabel="micros/op", 
+                   title="LevelDB 64 Cores 2000B Values",
+                   xlabel="Categories",
+                   ylabel="micros/op",
                    output_file="leveldb64_val2000.pdf"
+           )
+
+
+def leveldb_1_ro():
+    master = [10, 0.223, 4]
+    llfree = [11, 0.225, 4]
+    fastvirt = [11, 0.225, 4]
+    labels = ["Master", "LLFree", "Superblock"]
+    categories = [ "readseq", "readrandom", "readreverse" ]
+
+    plot_bar_chart(master, llfree, fastvirt,
+                   labels=labels, 
+                   categories=categories,
+                   cap=0,
+                   title="LevelDB 1 Core",
+                   xlabel="Categories",
+                   ylabel="micros/op",
+                   output_file="leveldb1_ro.pdf"
+           )
+
+
+def leveldb_64_ro():
+    master = [24, 157.2, 22]
+    llfree = [28, 161.587, 20]
+    fastvirt = [27, 151.441, 22]
+    labels = ["Master", "LLFree", "Superblock"]
+    categories = [ "readseq", "readrandom", "readreverse" ]
+
+    plot_bar_chart(master, llfree, fastvirt,
+                   labels=labels, 
+                   categories=categories,
+                   cap=0,
+                   title="LevelDB 1 Core",
+                   xlabel="Categories",
+                   ylabel="micros/op",
+                   output_file="leveldb64_ro.pdf"
            )
 
 
