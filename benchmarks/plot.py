@@ -118,7 +118,7 @@ def parse_file(file_path):
             measurement = 0
             iteration += 1
         elif iteration >= 0:
-            cpu_cycles[measurement].append(int(line))
+            cpu_cycles[measurement].append(float(line))
             measurement += 1;
 
     return np.array(cpu_cycles), xlabel, ylabel, granularity
