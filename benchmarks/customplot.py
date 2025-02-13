@@ -140,7 +140,7 @@ def leveldb_64_val2000():
     plot_bar_chart(master, llfree, fastvirt,
                    labels=labels, 
                    categories=categories,
-                   cap=0,
+                   cap=3200,
                    title="LevelDB 64 Cores 2000B Values",
                    xlabel="Categories",
                    ylabel="micros/op",
@@ -177,7 +177,7 @@ def leveldb_64_ro():
                    labels=labels, 
                    categories=categories,
                    cap=0,
-                   title="LevelDB 1 Core",
+                   title="LevelDB 64 Cores",
                    xlabel="Categories",
                    ylabel="micros/op",
                    output_file="leveldb64_ro.pdf"
@@ -214,8 +214,78 @@ def fio():
                    output_file="fio.pdf"
            )
 
-# leveldb_1()
-# leveldb_64()
-leveldb_64_val2000()
+def myleveldb1():
+    master = [ 1.995, 18.700, 5.522, 7.750, 6.998, 2.029, 0.394, 0.694, 166271.000, 1.935, 0.380, 0.656, 48.860, 0.565 ]
+    llfree = [ 2.056, 18.630, 5.547, 7.910, 7.378, 2.082, 0.423, 0.729, 185273.000, 1.939, 0.400, 0.655, 49.730, 0.568 ]
+    fastvirt = [ 2.791, 19.990, 8.028, 12.028, 11.065, 3.819, 0.862, 1.212, 303730.000, 3.421, 0.771, 1.063, 68.790, 0.567 ]
+    labels = ["Master", "LLFree", "Superblock"]
+    categories = [
+          "fillseq",
+          "fillsync",
+          "fillrandom",
+          "overwrite",
+          "readrandom",
+          "readrandom",
+          "readseq",
+          "readreverse",
+          "compact",
+          "readrandom",
+          "readseq",
+          "readreverse",
+          "fill100K",
+          "crc32c"
+      ]
+
+    plot_bar_chart(master, llfree, fastvirt,
+                   labels=labels, 
+                   categories=categories,
+                   cap=70,
+                   title="LevelDB 1 Core 2000B Values local",
+                   xlabel="Categories",
+                   ylabel="micros/op",
+                   output_file="myleveldb1.pdf"
+           )
+
+def myleveldb32():
+    master = [ 99.672, 18.982, 293.254, 294.756, 148.213, 110.178, 22.760, 27.413, 5708314.000, 98.706, 22.344, 27.389, 5199.124, 13.360 ]
+    llfree = [ 119.723, 79.301, 301.264, 331.922, 111.208, 106.878, 11.684, 16.100, 7022524.000, 98.782, 11.703, 15.554, 5854.882, 12.732 ]
+    fastvirt = [ 175.469, 21.008, 515.466, 533.631, 229.225, 125.186, 36.237, 36.690, 11486073.000, 138.776, 32.629, 37.120, 11211.324, 13.858 ]
+    labels = ["Master", "LLFree", "Superblock"]
+    categories = [
+          "fillseq",
+          "fillsync",
+          "fillrandom",
+          "overwrite",
+          "readrandom",
+          "readrandom",
+          "readseq",
+          "readreverse",
+          "compact",
+          "readrandom",
+          "readseq",
+          "readreverse",
+          "fill100K",
+          "crc32c"
+      ]
+
+    plot_bar_chart(master, llfree, fastvirt,
+                   labels=labels, 
+                   categories=categories,
+                   cap=500,
+                   title="LevelDB 32 Cores 2000B Values local",
+                   xlabel="Categories",
+                   ylabel="micros/op",
+                   output_file="myleveldb32.pdf"
+           )
+
+leveldb_1()
+leveldb_64()
+# leveldb_64_val2000()
+
+# leveldb_1_ro()
+# leveldb_64_ro()
+
+# myleveldb1()
+# myleveldb32()
 
 # fio()
