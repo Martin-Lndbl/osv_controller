@@ -6,11 +6,11 @@ import sys
 import time
 
 def run_benchmarks(file_path, format_string, use_stdout=False):
-    output_dir = "out"
+    t=time.time_ns()
+    output_dir = f"out/native/{t}"
     if not use_stdout:
         os.makedirs(output_dir, exist_ok=True)
 
-    t=time.time_ns()
 
     with open(file_path, 'r') as file:
         for line in file:
@@ -23,7 +23,6 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
             output_file_path = os.path.join(
                 output_dir,
                 format_string.format(
-                    time=t,
                     benchmark=benchmark,
                     vcpus=int(vcpus),
                     threads=int(threads),
@@ -38,10 +37,7 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
             for iteration in range(int(iterations)):
                 command = (
                     f"taskset -c 32-{32 + int(vcpus) - 1} "
-                    f"../osv/scripts/run.py --novnc --nogdb "
-                    f"--vcpus {vcpus} "
-                    f"--memsize {memsize} "
-                    f"-e \"{benchmark} -t {threads} -m {measurements} -g {granularity} -s {size}\""
+                    f"../osv/benchmarks/osv_malloc_microbench/{benchmark} -t {threads} -m {measurements} -g {granularity} -s {size}"
                 )
 
                 print(f"Executing (iteration {iteration + 1}/{iterations}): {command}")
@@ -89,6 +85,7 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
                     print(f"Error executing command: {command}")
                     print(e)
                     sys.exit(1)
+    print(f"{output_dir}")
 
 
 if __name__ == "__main__":
@@ -99,7 +96,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    default_format = "{time}_{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}_{size}"
+    default_format = "{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}_{size}"
 
     run_benchmarks(args.bench_file, args.format or default_format, args.stdout)
 

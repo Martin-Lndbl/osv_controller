@@ -35,6 +35,7 @@ def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev, log):
 
     # Create a plot with half a DIN A4 page width (4.13 inches) and height 3 inches
     plt.figure(figsize=(4.13, 3))
+    # plt.figure(figsize=(12, 6))
 
     for file_name, cpu_cycles in data.items():
         # Handle different types of granularity (number or list)
