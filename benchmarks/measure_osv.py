@@ -88,7 +88,7 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
                     print(f"Error executing command: {command}")
                     print(e)
                     sys.exit(1)
-    print(f"file regex: {output_dir}/{t}*")
+    print(f"file regex: {output_dir}/*")
 
 
 if __name__ == "__main__":

@@ -50,6 +50,7 @@ def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev, log):
         cycles = cpu_cycles.mean(axis=1)
         std_devs = np.std(cpu_cycles, axis=1)
 
+
         if(stddev):
             # Plot standard deviation first (in gray, no lines)
             plt.errorbar(
@@ -78,6 +79,8 @@ def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev, log):
 
     if(log):
         plt.yscale('log')
+    else:
+        plt.yscale('linear')
 
     # Adjust layout to ensure labels are not cut off
     plt.tight_layout()
@@ -86,7 +89,7 @@ def plot_benchmark(data, granularity, title, xlabel, ylabel, stddev, log):
     plt.savefig("benchmark_plot.pdf", format="pdf", dpi=300)  # High DPI for quality
     plt.show()
 
-def parse_file(file_path):
+def parse_file(file_path, alloc_free):
     with open(file_path, 'r') as file:
         lines = file.readlines()
     
@@ -109,7 +112,7 @@ def parse_file(file_path):
         elif line.startswith("granularity"):
             granularity = int(line.split()[1])
         elif line.startswith("iteration 0:"):
-            cpu_cycles = [[] for _ in range(measurements)]
+            cpu_cycles = [[] for _ in range(measurements*(2 if alloc_free else 1))]
             iteration = 0
         elif line.startswith("xlabel"):
             xlabel = " ".join(line.split()[1:])
@@ -183,6 +186,7 @@ def main():
     parser.add_argument('-t', '--title', type=str, default=None, help="Custom title for the plot")
     parser.add_argument('-s', '--stddev', action='store_true', help="Show standard deviation on the plot")
     parser.add_argument('-e', '--log', action='store_true', help="Show y axis with logarithmic scale")
+    parser.add_argument('-a', '--alloc_free', action='store_true', help="Specify that measurements contain alloc+free time per iteration")
 
 
     # Parse arguments
@@ -203,7 +207,7 @@ def main():
 
     # Read data from files and validate consistency
     for file_path in args.file_paths:
-        cpu_cycles, xlabel, ylabel, file_granularity = parse_file(file_path)
+        cpu_cycles, xlabel, ylabel, file_granularity = parse_file(file_path, args.alloc_free)
 
         num_measurements = len(cpu_cycles)
 
@@ -213,11 +217,11 @@ def main():
                 xl = args.xlabel
             if (args.ylabel):
                 yl = args.ylabel
-        else:
-            if (num_measurements > 1 and (xlabel != xl or ylabel != yl or file_granularity != gr or num_measurements != nm)):
+
+        elif (num_measurements > 2 and (xlabel != xl or ylabel != yl or file_granularity != gr or num_measurements != nm)):
                 print(f"Inconsistent data in file: {file_path}")
                 print(f"Expected: xlabel='{xl}', ylabel='{yl}', granularity={gr}, number of measurements={nm}")
-                print(f"Found: xlabel='{xlabel}', ylabel='{ylabel}', granularity={file_granularity}, number of measurements={num_measurements}")
+                print(f"Found   : xlabel='{xlabel}', ylabel='{ylabel}', granularity={file_granularity}, number of measurements={num_measurements}")
 
         if(len(args.file_paths) == 1):
             data[args.label] = cpu_cycles
@@ -231,6 +235,11 @@ def main():
     if all(len(iterations) == 1 for iterations in data.values()):
         merged_iterations = np.array([iterations[0] for iterations in data.values()])
         data = {args.label: (merged_iterations)}
+        gr = 1
+    if all(len(iterations) == 2 for iterations in data.values()):
+        merged_allocs = np.array([iterations[0] for iterations in data.values()])
+        merged_frees = np.array([iterations[1] for iterations in data.values()])
+        data = {f"{args.label}_alloc": (merged_allocs), f"{args.label}_free": (merged_frees)}
         gr = 1
 
     # Plot the benchmark data with the specified granularity

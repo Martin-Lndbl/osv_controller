@@ -60,11 +60,9 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
                             print(f"[ERROR] Detected error in output: {line}")
                             os.killpg(os.getpgid(process.pid), signal.SIGTERM)
                             sys.exit(1)
-                        elif (line.startswith("OSv") and iteration == 0):
-                            filtered_output.append(line)
                         elif line.startswith("out"):
                             filtered_output.append(f"iteration {iteration}:\n")
-                        elif len(filtered_output) > 0:
+                        elif iteration == 0 or len(filtered_output) > 0:
                             filtered_output.append(line)
 
                     process.wait()
