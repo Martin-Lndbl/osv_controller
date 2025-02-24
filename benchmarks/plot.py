@@ -1,7 +1,46 @@
 import matplotlib.pyplot as plt
 import argparse
 import os
+import csv
 import numpy as np
+
+def export_benchmark_csv(data, granularity, filename="benchmark_data.csv", stddev=False):
+    """
+    Export benchmark data to a CSV file.
+
+    :param data: Dictionary with file names as keys and numpy arrays as values.
+    :param granularity: List or integer representing the measurement granularity.
+    :param filename: Name of the output CSV file.
+    :param stddev: Boolean indicating whether to include standard deviation.
+    """
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+
+        # Write header
+        header = ["measurement"] + list(data.keys())
+        if stddev:
+            header += [f"{key}_stddev" for key in data.keys()]
+        writer.writerow(header)
+
+        # Determine measurement indices
+        max_len = max(arr.shape[0] for arr in data.values())
+        measurements = (granularity if isinstance(granularity, list)
+                        else list(range(1, max_len * granularity + 1, granularity)))
+
+        # Write data
+        for i in range(max_len):
+            row = [measurements[i] if i < len(measurements) else ""]
+            for key in data:
+                mean_val = np.mean(data[key][i]) if i < len(data[key]) else ""
+                row.append(mean_val)
+            if stddev:
+                for key in data:
+                    std_val = np.std(data[key][i]) if i < len(data[key]) else ""
+                    row.append(std_val)
+            writer.writerow(row)
+
+    print(f"Benchmark data exported to {filename}")
+
 
 def parse_granularity(granularity_str):
     """
@@ -239,14 +278,14 @@ def main():
     if all(len(iterations) == 2 for iterations in data.values()):
         merged_allocs = np.array([iterations[0] for iterations in data.values()])
         merged_frees = np.array([iterations[1] for iterations in data.values()])
-        data = {f"{args.label}_alloc": (merged_allocs), f"{args.label}_free": (merged_frees)}
+        data = {f"{args.label} allocation": (merged_allocs), f"{args.label} deallocation": (merged_frees)}
         gr = 1
 
     # Plot the benchmark data with the specified granularity
-    plot_benchmark(data, granularity or gr, args.title, xl, yl, args.stddev, args.log)
+    # plot_benchmark(data, granularity or gr, args.title, xl, yl, args.stddev, args.log)
+    export_benchmark_csv(data, granularity or gr, f"{args.title}.csv", args.stddev)
     # plot_benchmark(boot, [1,16,32,48,64], "Boot Time", "Cores", "Time (ms)", args.stddev, args.log)
 
 
 if __name__ == "__main__":
     main()
-
