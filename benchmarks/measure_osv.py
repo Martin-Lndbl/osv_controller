@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    default_format = "{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}_{size}"
+    default_format = "{benchmark}_{vcpus:02}_{threads:02}_{memsize}_{iterations}_{measurements}_{granularity}_{size:06}"
 
     run_benchmarks(args.bench_file, args.format or default_format, args.stdout)
 

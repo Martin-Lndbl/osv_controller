@@ -36,7 +36,6 @@ def run_benchmarks(file_path, format_string, use_stdout=False):
 
             for iteration in range(int(iterations)):
                 command = (
-                    f"taskset -c 32-{32 + int(vcpus) - 1} "
                     f"../osv/benchmarks/osv_malloc_microbench/{benchmark} -t {threads} -m {measurements} -g {granularity} -s {size}"
                 )
 

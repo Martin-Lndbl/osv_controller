@@ -41,20 +41,27 @@ def export_benchmark_csv(data, granularity, filename="benchmark_data.csv", stdde
 
     print(f"Benchmark data exported to {filename}")
 
-
 def parse_granularity(granularity_str):
     """
-    Parse granularity string, which can contain ranges and individual numbers.
-    Example formats: '1-24', '32,40,48', or '1-24,32,40,48'
+    Parse granularity string, which can contain ranges, multipliers, and individual numbers.
+    Example formats: '1-5*10', '32,40,48', or '1-5*10,32,40,48'
     """
     granularity_list = []
     parts = granularity_str.split(',')
 
     for part in parts:
-        if '-' in part:
+        if '*' in part:  # Handle multiplier
+            range_part, multiplier = part.split('*')
+            multiplier = int(multiplier)
+            if '-' in range_part:  # Handle range within multiplier
+                start, end = map(int, range_part.split('-'))
+                granularity_list.extend([x * multiplier for x in range(start, end + 1)])
+            else:  # Single number with multiplier
+                granularity_list.append(int(range_part) * multiplier)
+        elif '-' in part:  # Handle range without multiplier
             start, end = map(int, part.split('-'))
             granularity_list.extend(range(start, end + 1))
-        else:
+        else:  # Single number
             granularity_list.append(int(part))
 
     return granularity_list
