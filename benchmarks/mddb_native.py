@@ -30,7 +30,7 @@ def run_benchmarks(sf, use_stdout=False):
     for query in range(1, 23):
         command = (
             "taskset -c 0-63 "
-            f"../osv/benchmarks/duckdb/duckdb/build/release/duckdb -f /tpch/{query}.sql {sf}.db"
+            f"../osv/benchmarks/duckdb/duckdb/build/release/duckdb -f ../osv/benchmarks/duckdb/tpch/{query}.sql {sf}.db"
         )
 
         print(f"Executing: {command}")
