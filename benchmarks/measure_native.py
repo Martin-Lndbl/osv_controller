@@ -7,7 +7,7 @@ import time
 
 def run_benchmarks(file_path, format_string, use_stdout=False):
     t=time.time_ns()
-    output_dir = f"out/native/{t}"
+    output_dir = f"out/linuxvm/{t}"
     if not use_stdout:
         os.makedirs(output_dir, exist_ok=True)
 
