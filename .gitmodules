@@ -1,3 +1,6 @@
 [submodule "osv"]
 	path = osv
 	url = git@github.com:Martin-Lndbl/osv.git
+[submodule "uCache"]
+	path = uCache
+	url = ./uCache/
