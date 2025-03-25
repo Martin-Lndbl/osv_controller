@@ -11,7 +11,7 @@ import csv
 # Retry configuration
 MAX_RETRIES = 8  # Max retry attempts for the command
 RETRY_DELAY = 1  # Delay in seconds between retries
-TIMEOUT = 20
+TIMEOUT = 120
 
 def run_benchmarks(sf, use_stdout=False):
     t = time.time_ns()
