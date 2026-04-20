@@ -40,7 +40,6 @@
             binutils
             bisoncpp
             gdb # gnu debugger
-            # glibc.static
             gnumake
             cmake
             gnupatch
@@ -82,6 +81,7 @@
             osv-ssl
             osv-ssl-hdr
             llvmPackages_18.clang-tools # language server
+            btop
           ];
 
           LD_LIBRARY_PATH = "${pkgs.readline}/lib:${pkgs.libz}/lib";
