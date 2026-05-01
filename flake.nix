@@ -1,7 +1,6 @@
 {
   description = "OSv flake";
-
-  inputs = {
+inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "nixpkgs/nixos-unstable";
     nixpkgs-2311.url = "github:nixos/nixpkgs?ref=23.11";
@@ -21,7 +20,7 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ (import ./nix/overlays { inherit inputs; }) ];
+          overlays = import ./nix/overlays { inherit inputs; };
         };
       in
       {
