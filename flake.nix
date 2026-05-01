@@ -21,7 +21,7 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ (import ./overlays.nix { inherit inputs; }) ];
+          overlays = [ (import ./nix/overlays { inherit inputs; }) ];
         };
       in
       {
@@ -81,7 +81,9 @@
             osv-ssl
             osv-ssl-hdr
             llvmPackages_18.clang-tools # language server
+
             btop
+            cpuid
           ];
 
           LD_LIBRARY_PATH = "${pkgs.readline}/lib:${pkgs.libz}/lib";
@@ -89,9 +91,11 @@
           GOMP_DIR = pkgs.libgcc.lib;
           BOOST_SO_DIR = "${pkgs.boost175}/lib";
 
-          LIBZ_DIR="${pkgs.libz}";
+          LIBZ_DIR = "${pkgs.libz}";
 
           CAPSTAN_QEMU_PATH = "${pkgs.qemu}/bin/qemu-system-x86_64";
+
+          LIKWID_DIR = "${pkgs.likwid}";
 
           shellHook = ''
             export OSV_BASE=$(git rev-parse --show-toplevel)
