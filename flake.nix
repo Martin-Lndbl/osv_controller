@@ -1,6 +1,6 @@
 {
   description = "OSv flake";
-inputs = {
+  inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "nixpkgs/nixos-unstable";
     nixpkgs-2311.url = "github:nixos/nixpkgs?ref=23.11";
@@ -81,8 +81,11 @@ inputs = {
             osv-ssl-hdr
             llvmPackages_18.clang-tools # language server
 
+            bear
             btop
             cpuid
+            likwid
+            papi
           ];
 
           LD_LIBRARY_PATH = "${pkgs.readline}/lib:${pkgs.libz}/lib";

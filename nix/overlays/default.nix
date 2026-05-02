@@ -4,6 +4,7 @@
   (import ./capstan.nix)
   (import ./osv-compile-commands.nix)
   (import ./likwid.nix)
+  (import ./papi.nix)
 
   (final: _prev: {
     boost175 = inputs.nixpkgs-2311.legacyPackages.${_prev.system}.boost175;
