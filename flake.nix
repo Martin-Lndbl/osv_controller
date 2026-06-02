@@ -3,9 +3,10 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "nixpkgs/nixos-unstable";
-    nixpkgs-2311.url = "github:nixos/nixpkgs?ref=23.11";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=23.11";
     nixpkgs-2211.url = "github:nixos/nixpkgs?ref=22.11";
+    nur-niwa.url = "github:Meandres/nur-niwa";
+    nur-niwa.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -13,8 +14,8 @@
       self,
       nixpkgs,
       nixpkgs-2211,
-      nixpkgs-2311,
       flake-utils,
+      nur-niwa,
     }@inputs:
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -23,92 +24,92 @@
           inherit system;
           overlays = [ (import ./overlays.nix { inherit inputs; }) ];
         };
+        niwa-pkgs = nur-niwa.packages.${system};
       in
       {
-        packages.capstan = pkgs.capstan;
-
         devShell = pkgs.mkShell {
 
-          # Don't add glib.static here - As there is an issue with wcslen defined twice.
-          # If you want to use statically linked executables, build them manually before calling ./scripts/build
           nativeBuildInputs = with pkgs; [
             ack # grep tool
             ant # java dev lib
             autoconf
             automake
             bash
+            bear
             binutils
             bisoncpp
+            gcc13
             gdb # gnu debugger
-            # glibc.static
-            gnumake
             cmake
+            gnumake
             gnupatch
-            osv_compile_commands
             flamegraph # code hierarchy visualization
             libedit
             libgcc # Compiler
             libtool
             libvirt
-            libz
             lua53Packages.lua
             ncurses
-            pkg-config
             pax-utils # elf security library
-            pyright
             python3
-            python3Packages.numpy
-            python3Packages.requests
-            python3Packages.matplotlib
+            python311Packages.requests
             p11-kit # PKCS#11 loader
             qemu_full # hypervisor
             readline # interactive line editing
             unzip
-            zulu8 # Java jdk
+            jdk8_headless # Java jdk
+            clang
+            osv-ssl
+            osv-ssl-hdr
+            yaml-cpp
+            xz.out
+            krb5.out
+            libselinux.out
+            libz
+            boost175
+            unixODBC
+            numactl
+            python311Packages.numpy
+            python311Packages.pandas
+            python311Packages.matplotlib
+            virtiofsd
+            just
             flex
-            pkg-config
             bison
-            icu
-            tcl
-            libuuid.dev
-            curl.dev
+            ninja
+            tbb
+            dpdk
+            snappy
+            zstd
+            zlib
+            bzip2
+            curl
+            glog
+            lz4
+            openssl
+            niwa-pkgs.driverctl
           ];
 
           buildInputs = with pkgs; [
             osv-boost # C++ libraries
-            readline # interactive line editing
+            readline.dev # interactive line editing
             libaio # I/O library
-            openssl # SSL/TLS library
-            osv-ssl
-            osv-ssl-hdr
-            llvmPackages_18.clang-tools # language server
+            osv-ssl # SSL/TLS library
+            clang-tools # language server
           ];
 
-          LD_LIBRARY_PATH = "${pkgs.readline}/lib:${pkgs.libz}/lib";
           LUA_LIB_PATH = "${pkgs.lua53Packages.lua}/lib";
-          GOMP_DIR = pkgs.libgcc.lib;
+          GOMP_DIR = pkgs.libgcc.out;
+          STATIC_LIBC = pkgs.glibc.static;
+          boost_base = "${pkgs.osv-boost}";
           BOOST_SO_DIR = "${pkgs.boost175}/lib";
-
-          LIBZ_DIR="${pkgs.libz}";
-
-          CAPSTAN_QEMU_PATH = "${pkgs.qemu}/bin/qemu-system-x86_64";
-
-          shellHook = ''
-            export OSV_BASE=$(git rev-parse --show-toplevel)
-            export OSV_BUILD_PATH=$OSV_BASE/build/release.x64
-
-            mkdir $TMP/openssl-all
-            ln -rsf ${pkgs.openssl}/* $TMP/openssl-all
-            ln -rsf ${pkgs.openssl.dev}/* $TMP/openssl-all
-            ln -rsf ${pkgs.openssl.out}/* $TMP/openssl-all
-            export OPENSSL_DIR="$TMP/openssl-all";
-            export OPENSSL_LIB_PATH="$TMP/openssl-all/lib";
-
-            mkdir $TMP/libboost
-            export boost_base="$TMP/libboost"
-            ln -s ${pkgs.osv-boost}/lib/* $TMP/libboost/
-            for file in $TMP/libboost/*-x64*; do mv "$file" "''${file//-x64/}"; done
-          '';
+          OPENSSL_DIR = "${pkgs.osv-ssl}";
+          OPENSSL_HDR = "${pkgs.osv-ssl-hdr}/include";
+          KRB5_DIR = "${pkgs.krb5.out}";
+          XZ_DIR = "${pkgs.xz.out}";
+          LIBZ_DIR = "${pkgs.libz}";
+          LIBSELINUX_DIR = "${pkgs.libselinux.out}";
+          DPDK_DIR = "${pkgs.dpdk}";
         };
       }
     );
